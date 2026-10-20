@@ -18,12 +18,16 @@ class TXIConfig:
     brightness_threshold: float = 0.25
     brightness_alpha: float = 1.0 / 1.4
     texture_gain: float = 1.2
+    detail_noise_floor: float = 0.0
+    detail_boost_limit: float | None = None
     tone_gamma: float = 1.0
     highlight_min: float = 0.82
     highlight_max: float = 0.95
     color_knee: float = 15.0
     color_knee_output: float = 5.0
     color_end: float = 30.0
+    field_fade_low: float = 0.0
+    field_fade_high: float = 0.0
 
 
 # A visibly stronger, exploratory setting for PitVis surgical video frames.
@@ -33,10 +37,14 @@ PITVIS_CONFIG = TXIConfig(
     range_sigma=0.22,
     brightness_threshold=0.45,
     brightness_alpha=0.60,
-    texture_gain=1.60,
+    texture_gain=1.45,
+    detail_noise_floor=0.035,
+    detail_boost_limit=0.30,
     color_knee=20.0,
     color_knee_output=8.0,
     color_end=45.0,
+    field_fade_low=0.04,
+    field_fade_high=0.16,
 )
 
 
@@ -54,6 +62,9 @@ def enhance_txi(image_bgr: np.ndarray, config: TXIConfig = TXIConfig()) -> tuple
             and 0 < config.brightness_threshold <= 1
             and 0 < config.brightness_alpha <= 1
             and config.texture_gain >= 1 and config.tone_gamma > 0
+            and config.detail_noise_floor >= 0
+            and (config.detail_boost_limit is None or config.detail_boost_limit > 0)
+            and 0 <= config.field_fade_low <= config.field_fade_high <= 1
             and 0 < config.color_knee_output < config.color_knee < config.color_end):
         raise ValueError("invalid TXI parameters")
 
@@ -90,7 +101,15 @@ def enhance_txi(image_bgr: np.ndarray, config: TXIConfig = TXIConfig()) -> tuple
     floor = 1.0 / 255.0
     log_detail = np.log(np.maximum(source, floor)) - np.log(np.maximum(base, floor))
     log_detail[highlights] = 0.0
-    mode2 = mapped_base * np.exp(config.texture_gain * log_detail)
+    # Optional surgical-video controls: small detail fluctuations are often
+    # sensor/compression noise. Limit only the *extra* texture amplification;
+    # the original detail remains, preserving the input when gain is one.
+    extra_detail = (config.texture_gain - 1) * np.sign(log_detail) * np.maximum(
+        np.abs(log_detail) - config.detail_noise_floor, 0)
+    if config.detail_boost_limit is not None:
+        extra_detail = np.clip(extra_detail, -config.detail_boost_limit,
+                               config.detail_boost_limit)
+    mode2 = mapped_base * np.exp(log_detail + extra_detail)
     mode2[source == 0] = 0
     mode2 = np.clip(mode2, 0, 1).astype(np.float32)
 
@@ -103,6 +122,15 @@ def enhance_txi(image_bgr: np.ndarray, config: TXIConfig = TXIConfig()) -> tuple
                             np.where((a >= s1) & (a < s2),
                                      t1 + (a - s1) * (s2 - t1) / (s2 - s1), a))
     mode1 = cv2.cvtColor(cv2.cvtColor(lab, cv2.COLOR_LAB2RGB), cv2.COLOR_RGB2BGR)
+    if config.field_fade_high > config.field_fade_low:
+        # Fade enhancement at the dark circular field boundary of PitVis.
+        # Use the original frame so a brightened fringe cannot define its
+        # own processing mask. Smoothstep avoids a visible threshold line.
+        weight = np.clip((brightest - config.field_fade_low) /
+                         (config.field_fade_high - config.field_fade_low), 0, 1)
+        weight = weight * weight * (3 - 2 * weight)
+        mode2 = source + weight[..., None] * (mode2 - source)
+        mode1 = source + weight[..., None] * (mode1 - source)
     return (_to_u8(mode1), _to_u8(mode2))
 
 

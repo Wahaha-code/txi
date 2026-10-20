@@ -48,16 +48,46 @@ def main() -> None:
 
         # Difference is measured within the visible field, excluding black border.
         visible = source.max(axis=2) > 20
+        source_luma = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
+        dark = visible & (source_luma <= np.percentile(source_luma[visible], 25))
+        # Only compare gradients inside tissue, away from the circular border.
+        interior = cv2.erode(visible.astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
+        reference_grad = cv2.Laplacian(source_luma.astype(np.float32), cv2.CV_32F)
+        textured = interior & (np.abs(reference_grad) > 3)
+
         def mean_change(result):
             difference = np.abs(result.astype(np.int16) - source.astype(np.int16))
             return round(float(difference[visible].mean()), 3) if visible.any() else 0.0
+
+        def quality_indicators(result):
+            result_luma = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+            dark_gain = (np.median(result_luma[dark].astype(np.float32) -
+                                   source_luma[dark]) if dark.any() else 0)
+            newly_clipped = visible & (source.max(axis=2) < 250) & (
+                result.max(axis=2) >= 250)
+            clipping_percent = 100 * newly_clipped.sum() / max(visible.sum(), 1)
+            result_grad = cv2.Laplacian(result_luma.astype(np.float32), cv2.CV_32F)
+            gradient_ratio = (np.mean(np.abs(result_grad[textured])) /
+                              np.mean(np.abs(reference_grad[textured]))
+                              if textured.any() else 1)
+            return (round(float(dark_gain), 3), round(float(clipping_percent), 3),
+                    round(float(gradient_ratio), 3))
+
+        m1_dark, m1_clip, m1_grad = quality_indicators(mode1)
+        m2_dark, m2_clip, m2_grad = quality_indicators(mode2)
 
         rows.append({"source": path.name,
                      "preset": args.preset,
                      "timestamp_s": metadata.get(path.name, {}).get("timestamp_s", ""),
                      "mode1": names[0], "mode2": names[1],
                      "mode1_mean_abs_change": mean_change(mode1),
-                     "mode2_mean_abs_change": mean_change(mode2)})
+                     "mode2_mean_abs_change": mean_change(mode2),
+                     "mode1_dark_luma_gain": m1_dark,
+                     "mode2_dark_luma_gain": m2_dark,
+                     "mode1_new_clipping_percent": m1_clip,
+                     "mode2_new_clipping_percent": m2_clip,
+                     "mode1_gradient_ratio": m1_grad,
+                     "mode2_gradient_ratio": m2_grad})
 
         previews = [cv2.resize(image, (384, 216), interpolation=cv2.INTER_AREA)
                     for image in (source, mode1, mode2)]

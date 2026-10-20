@@ -29,7 +29,7 @@ python txi.py /path/to/image.png --mode 1 --output /path/to/enhanced.png
 python txi.py /path/to/frame.png --preset pitvis
 ```
 
-调参版输出文件名包含 `_txi_pitvis_`，不会覆盖默认版。它提高暗部和纹理增益，并扩展 mode 1 的红浅色映射范围；这是针对当前样本的探索性设置，**不是论文报告的参数，也没有临床验证**。
+调参版输出文件名包含 `_txi_pitvis_`，不会覆盖默认版。它提高暗部覆盖范围，针对视频噪声限制纹理放大，并减弱圆形视野边界的处理；这是针对当前样本的探索性设置，**不是 Olympus 商用参数，也没有临床验证**。
 
 也可通过 Python 调用：
 
@@ -69,8 +69,10 @@ python scripts/test_txi_frames.py data/pitvis_unlabeled data/pitvis_txi_results
 PitVis 调参版九帧结果：
 
 ```bash
-python scripts/test_txi_frames.py data/pitvis_unlabeled data/pitvis_txi_tuned --preset pitvis
+python scripts/test_txi_frames.py data/pitvis_unlabeled data/pitvis_txi_optimized --preset pitvis
 ```
+
+结果目录含 `comparison.png` 和 `results.csv`。CSV 记录暗部亮度变化、新增接近白色饱和像素比例、组织内部梯度变化以及平均像素变化。这些是无标注图像的工程指标，不能代替医生评价或证明病灶检出率提高。
 
 ## 实现与论文的对应关系
 
@@ -85,7 +87,23 @@ TXI 模块位于 `code/txi.py`，依次执行六步：
 
 论文没有给出双边滤波的具体参数、反光检测规则以及内镜设备的色调曲线。本实现提供可用的默认值，但不宣称与 Olympus 商用 TXI 像素一致。可通过 `--spatial-sigma`、`--range-sigma`、`--tone-gamma` 调整常见输入；其他参数见 `TXIConfig`。
 
-论文默认参数针对动物胃肠内镜图像；PitVis 经鼻垂体手术视频的亮度和色彩分布不同。九帧测试中，默认暗部阈值平均只覆盖约 12% 的可见画面，因此默认版变化较小。`PITVIS_CONFIG` 是单独保留的探索性调参版，使用更宽的暗部阈值、纹理增益与 Lab `a*` 映射范围。
+论文默认参数针对动物胃肠内镜图像；PitVis 经鼻垂体手术视频的亮度和色彩分布不同。九帧测试中，默认暗部阈值平均只覆盖约 12% 的可见画面，因此默认版变化较小。`PITVIS_CONFIG` 是单独保留的探索性调参版。
+
+### 参数依据与 PitVis 优化
+
+| 参数 | 论文复现预设 | PitVis 实验预设 | 作用 |
+| --- | ---: | ---: | --- |
+| 暗部阈值 `brightness_threshold` | 0.25 × 图像最大值 | 0.45 × 图像最大值 | 覆盖更多较暗组织；论文给出曾测试 0.20–0.75 |
+| 暗部指数 `brightness_alpha` | 1/1.4 ≈ 0.714 | 0.60 | 较小值提亮更强；论文测试 0.5–1 |
+| 纹理增益 `texture_gain` | 1.2 | 1.45 | 论文测试 1–2，并提醒过强会过度增强 |
+| 双边滤波 `spatial_sigma` / `range_sigma` | 15 / 0.12 | 25 / 0.22 | 论文没有公布数值；仅为本实现的经验值 |
+| Lab 红浅色折线 | (0,0)→(15,5)→(30,30) | (0,0)→(20,8)→(45,45) | PitVis 色彩范围不同；扩展幅度未获临床验证 |
+| 对数细节噪声门槛 / 额外增益上限 | 0 / 无 | 0.035 / 0.30 | 新增视频降噪保护，避免小波动及强边缘过度放大 |
+| 视野边界渐隐 | 关闭 | 原图最大通道值 0.04–0.16 | 减少手术视频圆形视野旁彩边 |
+
+输入是已渲染的 8 位视频帧，原设备的色调曲线与原始传感器数据不可得，因此两个预设的 `tone_gamma` 都保持 1。可在命令行覆盖参数，例如 `--texture-gain 1.3 --detail-noise-floor 0.05`；其他可调项见 `python txi.py --help`。对不同内镜和曝光条件应重新评估预设。
+
+当前九帧的 mode 2 测试中，优化前后暗部亮度中位增量平均约为 5.11 与 5.22 灰度级；新增接近饱和像素比例平均从 0.192% 降至 0.036%。在原图最大通道值为 5–34 的边界区域，mode 1 的平均绝对变化从 13.33 降至 3.74 灰度级。结果保存在本地 `data/pitvis_txi_optimized/`，源视频帧和生成图像按项目设置不提交到 Git。
 
 ## 原有 Retinex 示例
 
@@ -98,4 +116,5 @@ python demo.py
 ## 参考文献
 
 - Sato et al., *TXI: Texture and Color Enhancement Imaging for Endoscopic Image Enhancement*, Journal of Healthcare Engineering, 2021. https://pmc.ncbi.nlm.nih.gov/articles/PMC8049784/
+- Olympus, *Technical Description of EVIS X1*, pp. 12–15. https://www.olympus-global.com/ir/data/pdf/Technical_Description_of_EVIS_X1.pdf
 - Petro et al., *Multiscale Retinex*, Image Processing On Line, 2014. https://doi.org/10.5201/ipol.2014.107

@@ -18,7 +18,14 @@ def main() -> None:
     parser.add_argument("--preset", choices=("paper", "pitvis"), default="paper")
     parser.add_argument("--spatial-sigma", type=float)
     parser.add_argument("--range-sigma", type=float)
+    parser.add_argument("--brightness-threshold", type=float)
+    parser.add_argument("--brightness-alpha", type=float)
+    parser.add_argument("--texture-gain", type=float)
+    parser.add_argument("--detail-noise-floor", type=float)
+    parser.add_argument("--detail-boost-limit", type=float)
     parser.add_argument("--tone-gamma", type=float)
+    parser.add_argument("--field-fade-low", type=float)
+    parser.add_argument("--field-fade-high", type=float)
     args = parser.parse_args()
     if args.mode == "both" and args.output is not None:
         parser.error("--output requires --mode 1 or --mode 2")
@@ -46,7 +53,14 @@ def main() -> None:
         overrides = {key: value for key, value in {
             "spatial_sigma": args.spatial_sigma,
             "range_sigma": args.range_sigma,
+            "brightness_threshold": args.brightness_threshold,
+            "brightness_alpha": args.brightness_alpha,
+            "texture_gain": args.texture_gain,
+            "detail_noise_floor": args.detail_noise_floor,
+            "detail_boost_limit": args.detail_boost_limit,
             "tone_gamma": args.tone_gamma,
+            "field_fade_low": args.field_fade_low,
+            "field_fade_high": args.field_fade_high,
         }.items() if value is not None}
         mode1, mode2 = enhance_txi(raw, replace(config, **overrides))
     except ValueError as exc:

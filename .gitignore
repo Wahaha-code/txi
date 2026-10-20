@@ -7,4 +7,5 @@ __pycache__/
 /data/pitvis_unlabeled/*.png
 /data/pitvis_txi_results/*.png
 /data/pitvis_txi_tuned/*.png
+/data/pitvis_txi_optimized/*.png
 /1.png

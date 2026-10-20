@@ -1,0 +1,10 @@
+source,preset,timestamp_s,mode1,mode2,mode1_mean_abs_change,mode2_mean_abs_change,mode1_dark_luma_gain,mode2_dark_luma_gain,mode1_new_clipping_percent,mode2_new_clipping_percent,mode1_gradient_ratio,mode2_gradient_ratio
+video_23_frame_004529.png,pitvis,188.708,video_23_frame_004529_mode1.png,video_23_frame_004529_mode2.png,6.029,3.583,9.0,8.0,0.0,0.0,1.125,1.162
+video_23_frame_022647.png,pitvis,943.625,video_23_frame_022647_mode1.png,video_23_frame_022647_mode2.png,5.598,3.789,9.0,5.0,0.009,0.042,1.076,1.098
+video_23_frame_031706.png,pitvis,1321.083,video_23_frame_031706_mode1.png,video_23_frame_031706_mode2.png,6.155,4.531,9.0,7.0,0.003,0.015,1.074,1.103
+video_23_frame_040765.png,pitvis,1698.542,video_23_frame_040765_mode1.png,video_23_frame_040765_mode2.png,6.275,4.067,9.0,5.0,0.01,0.045,1.079,1.104
+video_23_frame_049824.png,pitvis,2076.000,video_23_frame_049824_mode1.png,video_23_frame_049824_mode2.png,5.965,3.795,8.0,5.0,0.006,0.032,1.087,1.116
+video_23_frame_058883.png,pitvis,2453.458,video_23_frame_058883_mode1.png,video_23_frame_058883_mode2.png,5.331,3.792,8.0,4.0,0.022,0.055,1.071,1.097
+video_23_frame_067942.png,pitvis,2830.917,video_23_frame_067942_mode1.png,video_23_frame_067942_mode2.png,5.463,3.672,7.0,4.0,0.015,0.044,1.059,1.084
+video_23_frame_077001.png,pitvis,3208.375,video_23_frame_077001_mode1.png,video_23_frame_077001_mode2.png,5.43,3.419,8.0,5.0,0.011,0.059,1.043,1.067
+video_23_frame_086060.png,pitvis,3585.833,video_23_frame_086060_mode1.png,video_23_frame_086060_mode2.png,5.348,3.118,7.0,4.0,0.012,0.035,1.061,1.086
