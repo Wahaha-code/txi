@@ -1,0 +1,10 @@
+source,timestamp_s,mode1,mode2,mode1_mean_abs_change,mode2_mean_abs_change
+video_23_frame_004529.png,188.708,video_23_frame_004529_mode1.png,video_23_frame_004529_mode2.png,2.26,0.463
+video_23_frame_022647.png,943.625,video_23_frame_022647_mode1.png,video_23_frame_022647_mode2.png,1.909,0.707
+video_23_frame_031706.png,1321.083,video_23_frame_031706_mode1.png,video_23_frame_031706_mode2.png,2.866,0.836
+video_23_frame_040765.png,1698.542,video_23_frame_040765_mode1.png,video_23_frame_040765_mode2.png,2.132,0.703
+video_23_frame_049824.png,2076.000,video_23_frame_049824_mode1.png,video_23_frame_049824_mode2.png,2.04,0.677
+video_23_frame_058883.png,2453.458,video_23_frame_058883_mode1.png,video_23_frame_058883_mode2.png,1.775,0.675
+video_23_frame_067942.png,2830.917,video_23_frame_067942_mode1.png,video_23_frame_067942_mode2.png,1.883,0.639
+video_23_frame_077001.png,3208.375,video_23_frame_077001_mode1.png,video_23_frame_077001_mode2.png,1.752,0.622
+video_23_frame_086060.png,3585.833,video_23_frame_086060_mode1.png,video_23_frame_086060_mode2.png,1.794,0.584

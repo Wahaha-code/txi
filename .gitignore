@@ -1,0 +1,10 @@
+__pycache__/
+/temp/
+*_txi_mode1.png
+*_txi_mode2.png
+*_txi_pitvis_mode1.png
+*_txi_pitvis_mode2.png
+/data/pitvis_unlabeled/*.png
+/data/pitvis_txi_results/*.png
+/data/pitvis_txi_tuned/*.png
+/1.png

@@ -1,0 +1,8 @@
+name: retinex-txi
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy>=1.26,<3
+  - opencv>=4.8,<5
+  - matplotlib>=3.8,<4
